@@ -1,94 +1,66 @@
 import requests
-import pandas as pd
+import csv
+import time
+from datetime import datetime, timedelta
 
-def get_binance_data(symbol='BTCUSDT', interval='1h', limit=500):
-    """
-    Binance API'den tarihsel Bitcoin verilerini çeker.
-    
-    Args:
-    - symbol: Hangi kripto parayı çekeceğin. BTCUSDT = Bitcoin/USDT
-    - interval: Zaman dilimi ('1m' = 1 dakika, '1h' = 1 saat, '1d' = 1 gün)
-    - limit: Kaç tane veri çekileceği (maksimum 1000)
-    
-    Returns:
-    - Pandas DataFrame olarak döner
-    """
-    url = f'https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}'
-    
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        
-        # Çekilen verileri DataFrame'e dönüştürme
-        df = pd.DataFrame(data, columns=[
-            'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 
-            'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 
-            'taker_buy_quote_asset_volume', 'ignore'
-        ])
-        
-        # Zamanı anlaşılır formata çevirme
-        df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
-        df['close_time'] = pd.to_datetime(df['close_time'], unit='ms')
+class BitcoinDataHandler:
+    def __init__(self, file_path='bitcoin_combined_data.csv', days=90, requests_count=3, currency="usd"):
+        self.url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
+        self.file_path = file_path
+        self.days = days
+        self.requests_count = requests_count
+        self.currency = currency
 
-        # Yalnızca gerekli sütunları alalım
-        df = df[['open_time', 'open', 'high', 'low', 'close', 'volume']]
-        
-        return df
-    else:
-        print(f"API isteği başarısız oldu! Hata kodu: {response.status_code}")
-        return None
-
-# Örneğin, 1 saatlik verileri çekelim (en fazla 500 veri)
-bitcoin_hourly_data = get_binance_data(interval='1h', limit=500)
-if bitcoin_hourly_data is not None:
-    print(bitcoin_hourly_data.head())
-    
-    
-def get_large_binance_dataset(symbol='BTCUSDT', interval='1h', total_limit=5000):
-    all_data = pd.DataFrame()
-    limit_per_request = 1000
-    end_time = None  # İlk istekte en güncel verileri çekeceğiz
-    
-    while len(all_data) < total_limit:
-        url = f'https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit_per_request}'
-        
-        if end_time:
-            url += f'&endTime={end_time}'
-        
-        response = requests.get(url)
-        
+    def fetch_data(self, start_date, end_date):
+        params = {
+            "vs_currency": self.currency,
+            "from": int(start_date.timestamp()),
+            "to": int(end_date.timestamp())
+        }
+        response = requests.get(f"{self.url}/range", params=params)
         if response.status_code == 200:
             data = response.json()
-            
-            if len(data) == 0:
-                print("Daha fazla veri yok.")
-                break
-            
-            df = pd.DataFrame(data, columns=[
-                'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 
-                'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 
-                'taker_buy_quote_asset_volume', 'ignore'
-            ])
-            
-            df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
-            df['close_time'] = pd.to_datetime(df['close_time'], unit='ms')
-
-            df = df[['open_time', 'open', 'high', 'low', 'close', 'volume']]
-            
-            all_data = pd.concat([all_data, df])
-
-            # Yeni istek için end_time güncelle (en eski veriye göre devam edelim)
-            end_time = int(df['open_time'].min().timestamp() * 1000)
+            if "prices" in data:
+                return data["prices"]
+            else:
+                print("Error: 'prices' key not found in JSON response.")
         else:
-            print(f"API isteği başarısız oldu! Hata kodu: {response.status_code}")
-            break
-    
-    return all_data
+            print(f"Error: API request failed with status code {response.status_code}")
+        return []
 
-# 5000 veri toplayalım
-bitcoin_large_dataset = get_large_binance_dataset(total_limit=5000)
-print(bitcoin_large_dataset.shape)
+    def write_to_csv(self, data):
+        with open(self.file_path, mode='a', newline='', encoding='utf-8') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            for entry in data:
+                timestamp = entry[0] / 1000  # Convert milliseconds to seconds
+                date = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(timestamp))
+                price = entry[1]
+                csv_writer.writerow([date, price])
 
-bitcoin_large_dataset.to_csv('bitcoin_data_5000.csv', index=False)
+    def fetch_and_save(self):
+        end_date = datetime.now()
+        # Başlık satırını dosyaya ekleyin
+        with open(self.file_path, mode='w', newline='', encoding='utf-8') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(['Tarih', 'Fiyat'])
 
+        for _ in range(self.requests_count):
+            start_date = end_date - timedelta(days=self.days)
+            print(f"Fetching data for {start_date.strftime('%Y-%m-%d')} - {end_date.strftime('%Y-%m-%d')}")
+
+            # API'den verileri çek ve CSV'ye yaz
+            prices = self.fetch_data(start_date, end_date)
+            if prices:
+                self.write_to_csv(prices)
+                print(f"{len(prices)} entries added for the period {start_date.strftime('%Y-%m-%d')} - {end_date.strftime('%Y-%m-%d')}")
+
+            # Bir sonraki aralık için bitiş tarihini güncelle
+            end_date = start_date
+            time.sleep(1)  # API talepleri arasında bekleme
+
+        print(f"All data has been saved to {self.file_path}")
+
+# Kullanım
+if __name__ == "__main__":
+    handler = BitcoinDataHandler()
+    handler.fetch_and_save()
