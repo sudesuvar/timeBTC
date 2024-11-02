@@ -84,7 +84,8 @@ class BitcoinDataScraper:
 
 
 if __name__ == "__main__":
-    chrome_driver_path = 'C:\\Users\\sudes\\Desktop\\chromedriver-win64\\chromedriver.exe'
+   # chrome_driver_path = 'C:\\Users\\sudes\\Desktop\\chromedriver-win64\\chromedriver.exe'
+    chrome_driver_path = 'C:\\Users\\zeyne\\Desktop\\chromedriver\\chromedriver.exe'
     csv_file_path = 'bitcoin_historical_data.csv'
     
     scraper = BitcoinDataScraper(chrome_driver_path, csv_file_path)
