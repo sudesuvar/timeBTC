@@ -24,7 +24,28 @@ class BitcoinPriceScraper:
     def open_website(self):
         self.driver.get("https://finance.yahoo.com/quote/BTC-USD/history/")
         WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "table")))
+        
+        # Click the specified button before scraping data
+        self.click_button()
+
         self.scrape_data()
+
+    def click_button(self):
+        try:
+            # İlk buton tıklaması
+            first_button_xpath = '//*[@id="nimbus-app"]/section/section/section/article/div[1]/div[1]/div[1]/button/span'
+            first_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, first_button_xpath)))
+            first_button.click()
+            time.sleep(2)  # Animasyonlar veya sayfa değişiklikleri için bekleme
+
+            # İkinci buton tıklaması
+            second_button_xpath = '/html/body/div[2]/main/section/section/section/article/div[1]/div[1]/div[1]/div/div/section/div[1]/button[8]'
+            second_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, second_button_xpath)))
+            second_button.click()
+            time.sleep(2)  # İkinci tıklama sonrası bekleme
+
+        except Exception as e:
+            print(f"Button click failed: {e}")
 
     def scrape_data(self):
         with open(self.csv_file_path, mode='w', newline='', encoding='utf-8') as file:
