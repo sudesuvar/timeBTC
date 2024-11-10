@@ -7,77 +7,68 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import csv
 
-class BitcoinPriceScraper:
+class seleniumYahoo:
     def __init__(self, driver_path):
         self.driver_path = driver_path
-        self.driver = self.initialize_driver()
-        self.csv_file_path = "bitcoin_prices_colored.csv"  # CSV dosyasının adı
-        self.previous_row_count = 0
-
-    def initialize_driver(self):
+        self.csv_file_path = "selenium_Yahoo.csv"
+    
+    def run_scraper(self):
+        # Initialize the WebDriver
         chrome_options = Options()
         chrome_options.add_argument("--start-maximized")
         service = Service(executable_path=self.driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
-        return driver
-
-    def open_website(self):
-        self.driver.get("https://finance.yahoo.com/quote/BTC-USD/history/")
-        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "table")))
-        self.scrape_data()
-
-    def scrape_data(self):
+        
+        # Open the Yahoo Finance website
+        driver.get("https://finance.yahoo.com/quote/BTC-USD/history/")
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "table")))
+        
+        # Open CSV file to write
         with open(self.csv_file_path, mode='w', newline='', encoding='utf-8') as file:
             csv_writer = csv.writer(file)
-            csv_writer.writerow(["Date", "Open", "High", "Low", "Close"])  # Başlıklar
+            csv_writer.writerow(["Date", "Open", "High", "Low", "Close"])  # Headers
 
+            # Scrape data
+            previous_row_count = 0
             while True:
                 try:
-                    table = self.driver.find_element(By.TAG_NAME, "table")  # Tablonun HTML etiketini bul
-                    rows = table.find_elements(By.TAG_NAME, "tr")  # Tüm tablo satırlarını bul
+                    table = driver.find_element(By.TAG_NAME, "table")  # Locate the table
+                    rows = table.find_elements(By.TAG_NAME, "tr")  # Find all table rows
 
-                    # Yeni satırları almak için satır sayısını karşılaştır
-                    new_rows = rows[self.previous_row_count:]  # Sadece yeni eklenen satırları al
-
+                    # Get only new rows
+                    new_rows = rows[previous_row_count:]
                     for row in new_rows:
-                        self.process_row(row, csv_writer)
+                        columns = row.find_elements(By.TAG_NAME, "td")
+                        if columns:
+                            # Extract text from each column
+                            date = columns[0].text
+                            open_price = columns[1].text
+                            high_price = columns[2].text
+                            low_price = columns[3].text
+                            close_price = columns[4].text
+                            
+                            # Write row to CSV
+                            csv_writer.writerow([date, open_price, high_price, low_price, close_price])
 
-                    # Şu anki satır sayısını kaydet
-                    self.previous_row_count = len(rows)
+                            # Highlight each cell in yellow
+                            for column in columns:
+                                driver.execute_script("arguments[0].style.backgroundColor = 'yellow';", column)
+                                time.sleep(0.1)  # Delay between each cell highlight
 
-                    # "Load More" butonu yoksa döngüden çık
-                    break  # Bu örnekte "Load More" butonu yok
+                    # Update row count
+                    previous_row_count = len(rows)
 
-                except Exception as e:
-                    print(f"Bir hata oluştu: {e}")
+                    # No "Load More" button in this example, break loop
                     break
 
-        print(f"Veriler {self.csv_file_path} dosyasına kaydedildi.")
+                except Exception as e:
+                    print(f"Error: {e}")
+                    break
 
-    def process_row(self, row, csv_writer):
-        columns = row.find_elements(By.TAG_NAME, "td")  # Satırdaki hücreleri bul
-        if columns:
-            date = columns[0].text  # Tarih sütunu
-            open_price = columns[1].text  # Açılış fiyatı
-            high_price = columns[2].text  # Yüksek fiyat
-            low_price = columns[3].text  # Düşük fiyat
-            close_price = columns[4].text  # Kapanış fiyatı
-
-            # Verileri CSV dosyasına yaz
-            csv_writer.writerow([date, open_price, high_price, low_price, close_price])
-
-            # Her hücreyi sarıya boyama
-            for column in columns:
-                self.driver.execute_script("arguments[0].style.backgroundColor = 'yellow';", column)  # Arka plan rengini sarı yap
-                time.sleep(0.1)  # Her hücre arasında bekle
-
-    def close_driver(self):
+        # Close the driver after a delay
         time.sleep(5)
-        self.driver.quit()
+        driver.quit()
+        
+        print(f"Data saved to {self.csv_file_path}")
 
-if __name__ == "__main__":
-    chrome_driver_path = 'C:\\Users\\zeyne\\Desktop\\chromedriver\\chromedriver.exe'
-
-    scraper = BitcoinPriceScraper(chrome_driver_path)
-    scraper.open_website()
-    scraper.close_driver()
+#
