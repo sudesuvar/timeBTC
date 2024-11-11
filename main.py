@@ -2,19 +2,19 @@ import requests
 import csv
 import time
 from datetime import datetime, timedelta
-from selenium_yahoo import seleniumYahoo
+from selenium_yahoo import selenium_yahoo
 from coingeckoApi import coingeckoApi
 
 class main:
   def main(self):
       s1 = coingeckoApi()
       s1.run()
-      s2 = seleniumYahoo(driver_path= 'C:\\Users\\sudes\\Desktop\\chromedriver-win64\\chromedriver.exe')
+      s2 = selenium_yahoo(driver_path= 'C:\\Users\\sudes\\Desktop\\chromedriver-win64\\chromedriver.exe', output_csv='selenium_yahoo.cvs')
       s2.run()
       
   
       output_file = "btcData.csv"
-      with open("coingecko_api.csv", "r") as file1, open("selenium_Yahoo.csv", "r") as file2, open(output_file, "w") as outfile:
+      with open("coingecko_api.csv", "r") as file1, open("selenium_yahoo.csv", "r") as file2, open(output_file, "w") as outfile:
         outfile.write(file1.read())
         outfile.write("\n")  
         outfile.write(file2.read())
@@ -25,7 +25,7 @@ class main:
         try:
           # Dosyaları silme
           os.remove("coingeckoApi.cvs")
-          os.remove("selenium_Yahoo.csv")
+          os.remove("selenium_yahoo.csv")
         except Exception as e:
           print(f"Dosyalar silinirken bir hata oluştu: {e}")
       else:
