@@ -12,7 +12,7 @@ class seleniumYahoo:
         self.driver_path = driver_path
         self.csv_file_path = "selenium_Yahoo.csv"
     
-    def run_scraper(self):
+    def run(self):
         # Initialize the WebDriver
         chrome_options = Options()
         chrome_options.add_argument("--start-maximized")
