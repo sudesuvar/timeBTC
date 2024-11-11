@@ -49,8 +49,8 @@ Artık projeyi çalıştırabilmek için tek yapmanız gereken dosyalardaki **dr
 
 ## Hazırlayanlar
 
-221307020 - Sude Deniz SUVAR
-221307007 - Şevval Zeynep Ayar
+- 221307020 - Sude Deniz SUVAR
+- 221307007 - Şevval Zeynep Ayar
 
 ## Teşekkürler
 - [Selenium Documentation](https://www.selenium.dev/documentation/en/)
