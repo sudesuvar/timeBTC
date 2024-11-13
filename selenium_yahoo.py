@@ -30,12 +30,12 @@ class selenium_yahoo:
                 first_button_xpath = '//*[@id="nimbus-app"]/section/section/section/article/div[1]/div[1]/div[1]/button/span'
                 first_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, first_button_xpath)))
                 first_button.click()
-                time.sleep(2)  # Animasyonlar için bekleme
+                time.sleep(10)  # Animasyonlar için bekleme
 
                 second_button_xpath = '/html/body/div[2]/main/section/section/section/article/div[1]/div[1]/div[1]/div/div/section/div[1]/button[8]'
                 second_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, second_button_xpath)))
                 second_button.click()
-                time.sleep(2)
+                time.sleep(30)
 
             except Exception as e:
                 print(f"Button click failed: {e}")
@@ -69,7 +69,7 @@ class selenium_yahoo:
                                 # Her hücreyi sarıya boyama
                                 for column in columns:
                                     driver.execute_script("arguments[0].style.backgroundColor = 'yellow';", column)
-                                    time.sleep(0.1)
+                                    #time.sleep(0.1)
 
                         # Yeni satır sayısını kaydet
                         previous_row_count = len(rows)
@@ -84,12 +84,13 @@ class selenium_yahoo:
             print(f"Veriler {self.output_csv} dosyasına kaydedildi.")
         
         finally:
-            time.sleep(5)
+            #time.sleep(5)
             driver.quit()
 
 if __name__ == "__main__":
-    chrome_driver_path = 'C:\\Users\\sudes\\Desktop\\chromedriver-win64\\chromedriver.exe'
+    #chrome_driver_path = 'C:\\Users\\sudes\\Desktop\\chromedriver-win64\\chromedriver.exe'
+    chrome_driver_path = 'C:\\Users\\zeyne\\Desktop\\chromedriver\\chromedriver.exe'
     output_csv_path = "selenium_Yahoo.csv"
     
-    scraper = selenium_yahoo(chrome_driver_path)
+    scraper = selenium_yahoo(chrome_driver_path,output_csv_path)
     scraper.run()
