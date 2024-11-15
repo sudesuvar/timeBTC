@@ -1,6 +1,6 @@
 # TimeBTC
 
-Bu proje, Yahoo Finance ve CoinGecko kaynaklarından Bitcoin fiyat verilerini toplayarak tek bir CSV dosyasında (combined_bitcoin_data.csv) depolamayı amaçlamaktadır. Proje, **Selenium** ve **requests** kütüphanelerini kullanarak iki farklı kaynaktan veri çekmektedir.
+Bu proje, Yahoo Finance ve CoinGecko kaynaklarından Bitcoin fiyat verilerini toplayarak tek bir CSV dosyasında (btcData.csv) depolamayı amaçlamaktadır. Proje, **Selenium** ve **requests** kütüphanelerini kullanarak iki farklı kaynaktan veri çekmektedir.
 
 ## Gereksinimler
 
